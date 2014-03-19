@@ -24,3 +24,5 @@ pkg
 ## PROJECT::SPECIFIC
 *.log
 thread-test
+
+.rbenv-gemsets
