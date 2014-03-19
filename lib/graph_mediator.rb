@@ -1,4 +1,4 @@
-require 'active_support'
+require 'active_support/all'
 require 'graph_mediator/mediator'
 require 'graph_mediator/locking'
 require 'graph_mediator/version'
