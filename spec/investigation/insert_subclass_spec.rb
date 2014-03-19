@@ -7,28 +7,28 @@ module DecoratingSubclassSpec # namespacing
 describe "Decorating by extending object eigenclass" do
 
   module Other
-  
+
     def dingo
-      super
+      super()
     end
     # super fails in dingo_without_other (see above)
     alias_method :dingo_without_other, :dingo
-  
+
     def dingo
-      super + " other"
+      super() + " other"
     end
-  
+
     def bat
       'bat'
     end
   end
-  
-  class SuperClass 
+
+  class SuperClass
     def dingo
       'dingo'
     end
   end
-  
+
   def reload_bar
     Object.send(:remove_const, :Bar) if Object.const_defined?(:Bar)
     instance_eval <<EOS
@@ -39,7 +39,7 @@ describe "Decorating by extending object eigenclass" do
   end
 EOS
   end
-  
+
   class SubClass < SuperClass; end
 
   before(:each) do

@@ -5,13 +5,13 @@ class SelfDecorating
     def self.extended(base)
       unless @@methods_to_alias.empty?
         # only needs to be done once
-        @@methods_to_alias.each do |target| 
+        @@methods_to_alias.each do |target|
           without_method = "#{target}_without_secret"
           klass = base.class
           method_defined_here = (klass.instance_methods(false) + klass.private_instance_methods(false)).include?(RUBY_VERSION < '1.9' ? target.to_s : target)
-          unless method_defined_here 
+          unless method_defined_here
             klass.send(:define_method, target) do |*args, &block|
-              super
+              super(*args, &block)
             end
           end
           unless klass.method_defined?(without_method)
@@ -21,7 +21,7 @@ class SelfDecorating
         @@methods_to_alias.clear
       end
     end
-  
+
     def foo
       'foo'
     end
@@ -32,7 +32,7 @@ class SelfDecorating
   end
 
   def self.new
-    c = super
+    c = super()
     return c.extend SelfDecorating::Secret
   end
 
@@ -46,10 +46,10 @@ class SelfDecorating
 #      end
 #      alias_method "#{method}_without_secret", method
       define_method(method) do |*args,&block|
-        super + ' with secret'
+        super(*args, &block) + ' with secret'
       end
       methods_to_alias << method
-    end 
+    end
   end
 end
 

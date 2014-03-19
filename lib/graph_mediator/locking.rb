@@ -22,7 +22,7 @@ module GraphMediator
           Array(ids).each do |id|
             currently_mediating?(id) ?
               update_counters_without_lock(id, counters) :
-              super
+              super()
           end
         end
       end
@@ -36,7 +36,7 @@ module GraphMediator
       # * True if we are in a mediated_transaction and lock_enabled? is true per
       #   ActiveRecord and we are in the midst of the version bumping phase of
       #   the transaction.
-      # 
+      #
       # Effectively this ensures that an optimistic lock check and version bump
       # occurs as usual outside of mediation but only at the end of the
       # transaction within mediation.

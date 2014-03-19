@@ -12,7 +12,7 @@ module GraphMediator
 
       def initialize(*args, &block)
         @index = {}
-        super
+        super(*args, &block)
       end
 
       def <<(ar_instance, klass, changes)
@@ -25,16 +25,16 @@ module GraphMediator
             destroyed_array = self[:_destroyed] ||= []
             destroyed_array << ar_instance.id
           else self[ar_instance.id] = changes
-        end 
+        end
       end
 
       def add_to_index(changes)
         index.merge!(changes)
       end
     end
- 
+
     class ChangesHash < IndexedHash
-    
+
       def <<(ar_instance)
         raise(ArgumentError, "Expected an ActiveRecord::Dirty instance: #{ar_instance}") unless ar_instance.respond_to?(:changed?)
         klass = ar_instance.class.base_class
@@ -84,7 +84,7 @@ module GraphMediator
         !_class_hash(klass).reject { |k,v| k == :_created || k == :_destroyed }.empty?
       end
 
-      # True only if a dependent of the given class was added or destroyed. 
+      # True only if a dependent of the given class was added or destroyed.
       def added_or_destroyed_dependent?(klass)
         added_dependent?(klass) || destroyed_dependent?(klass)
       end
@@ -107,18 +107,18 @@ module GraphMediator
 # reloading.  After the first call, you hold a reference to an old Class which
 # will no longer work as a key in a new changes hash.
 #            self.class.__send__(:define_method, method) do
-              return attribute_changed?(attribute, klass) 
+              return attribute_changed?(attribute, klass)
 #            end
 #            return send(method)
-          else super       
+          else super()
         end
       end
-      
+
       private
 
       def _class_hash(klass)
         self.fetch(klass.base_class, nil) || IndexedHash.new
-      end 
+      end
     end
 
     # An instance of the root ActiveRecord object currently under mediation.
@@ -162,7 +162,7 @@ module GraphMediator
       mediated_instance.mediation_enabled?
     end
 
-    # The id of the instance we are mediating.  
+    # The id of the instance we are mediating.
     def mediated_id
       mediated_instance.try(:id)
     end
@@ -196,7 +196,7 @@ module GraphMediator
     end
 
     [:debug, :info, :warn, :error, :fatal].each do |level|
-      define_method(level) do |message| 
+      define_method(level) do |message|
         mediated_instance.send("m_#{level}", "\e[4;32;1m#{self} - #{aasm_current_state} :\e[0m #{message}")
       end
     end
@@ -211,7 +211,7 @@ module GraphMediator
           current_lock_version = mediated_instance.send(locking_column) if locking_column
         end
         debug("reloading")
-        mediated_instance.reload 
+        mediated_instance.reload
         raise(ActiveRecord::StaleObjectError) if current_lock_version && current_lock_version != mediated_instance.send(locking_column)
       end
     end
@@ -222,7 +222,7 @@ module GraphMediator
       debug("begin_transaction called")
       result = if mediation_enabled?
         start!
-        _wrap_in_callbacks &block 
+        _wrap_in_callbacks &block
       else
         disable!
         debug("mediation disabled; begin_transaction yielding instead")
@@ -253,7 +253,7 @@ module GraphMediator
         bump!
         mediated_instance.touch if mediated_instance.class.locking_enabled?
         debug("_wrap_in_callbacks bumping done")
-        refresh_mediated_instance # after having cached and versioned 
+        refresh_mediated_instance # after having cached and versioned
       end
       return result
     end

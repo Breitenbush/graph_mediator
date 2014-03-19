@@ -2,6 +2,7 @@ require 'active_support'
 require 'graph_mediator/mediator'
 require 'graph_mediator/locking'
 require 'graph_mediator/version'
+require 'pry'
 
 # = GraphMediator
 #
@@ -26,7 +27,7 @@ require 'graph_mediator/version'
 # There are convenience method to perform a save, save!, toggle,
 # toggle!, update_attribute, update_attributes or update_attributes!
 # call without mediation.  They are of the form <method>_without_mediation<punc>
-# 
+#
 # For example, save_without_mediation! is equivalent to:
 #
 #  instance.disable_mediation!
@@ -34,29 +35,29 @@ require 'graph_mediator/version'
 #  instance.enable_mediation!
 #
 # == Overriding
-# 
+#
 # GraphMediator overrides ActiveRecord's save_without_transaction to slip in
 # mediation just before the save process is wrapped in a transaction.
-# 
+#
 # * save_without_transaction
 # * save_without_transaction_with_mediation
 # * save_without_transaction_without_mediation
-# 
+#
 # may all be overridden in your implementation class, but they end up being
 # defined locally by GraphMediator, so you can override with something like
 # alias_method_chain, but will need to be in a subclass to use super.
-# 
+#
 # My original intention was to define aliased overrides in MediatorProxy if the
 # target was a method in a superclass (like save), so that the implementation
 # class could make a simple def foo; something; super; end override, but this
 # is prevented by a bug in ruby 1.8 with aliasing of methods that use super in
 # a module.  http://redmine.ruby-lang.org/issues/show/734
-# 
+#
 module GraphMediator
-  
+
   CALLBACKS = [:before_mediation, :mediate_reconciles, :mediate_caches, :mediate_bumps]
   SAVE_METHODS = [:save_without_transactions, :save_without_transactions!]
- 
+
   # We want lib/graph_mediator to define GraphMediator constant
   require 'graph_mediator/mediator'
 
@@ -70,7 +71,7 @@ module GraphMediator
       end
       initialize_for_mediation(base)
     end
- 
+
     private
 
     def initialize_for_mediation(base)
@@ -80,7 +81,7 @@ module GraphMediator
       base.__send__(:class_inheritable_array, :graph_mediator_dependencies)
       base.graph_mediator_dependencies = []
       base.__send__(:_register_for_mediation, *(SAVE_METHODS.clone << { :track_changes => true }))
-      base.class_eval do 
+      base.class_eval do
         _alias_method_chain_ensuring_inheritability(:destroy, :flag)
       end
     end
@@ -118,7 +119,7 @@ module GraphMediator
       # Relies on ActiveSupport::Callbacks (which is included
       # into ActiveRecord::Base) for callback handling.
       base.define_callbacks *CALLBACKS
-      return proxy 
+      return proxy
     end
 
   end
@@ -133,7 +134,7 @@ module GraphMediator
     # including GraphMediator uses the class's ActiveRecord logger.  Setting
     # GraphMediator::Configuration.logger overrides this.
     mattr_accessor :logger
-    
+
     # Log level may be adjusted just for GraphMediator globally, or for each
     # class including GraphMediator.  This should be an
     # ActiveSupport::BufferedLogger log level constant such as
@@ -155,7 +156,7 @@ module GraphMediator
   # All of the working methods for mediation, plus initial call backs.
   module Proxy
     extend Util
- 
+
     module ClassMethods
       # Turn on mediation for all instances of this class. (On by default)
       def enable_all_mediation!
@@ -164,12 +165,12 @@ module GraphMediator
 
       # Turn off mediation for all instances of this class. (Off by default)
       #
-      # This will cause new mediators to start up disabled, but existing 
+      # This will cause new mediators to start up disabled, but existing
       # mediators will finish normally.
       def disable_all_mediation!
         self.__graph_mediator_enabled = false
       end
-    
+
       # True if mediation is enabled at the class level.
       def mediation_enabled?
         self.__graph_mediator_enabled
@@ -198,7 +199,7 @@ module GraphMediator
       # are currently in the process of being deleted.
       def mediator_being_destroyed_array_key; end
 
-      # The hash of Mediator instances active in this Thread for the Proxy's 
+      # The hash of Mediator instances active in this Thread for the Proxy's
       # base class.
       #
       # instance.id => Mediator of (instance)
@@ -228,7 +229,7 @@ module GraphMediator
       end
     end
 
-    # Wraps the given block in a transaction and begins mediation. 
+    # Wraps the given block in a transaction and begins mediation.
     def mediated_transaction(&block)
       m_debug("#{self}.mediated_transaction called")
       mediator = _get_mediator
@@ -244,7 +245,7 @@ module GraphMediator
         mediators_for_new_records.delete(mediator)
       end
     end
- 
+
     # True if there is currently a mediated transaction begun for
     # this instance.
     def currently_mediating?
@@ -280,7 +281,7 @@ module GraphMediator
     # Used by dependents in the mediation process to check whether they should
     # update their root (see notes under the +mediate+ method).
     def being_destroyed?
-      instances_being_destroyed.include?(id)  
+      instances_being_destroyed.include?(id)
     end
 
     # Surrounding the base destroy ensures that instance is marked in Thread
@@ -304,7 +305,7 @@ module GraphMediator
     end
 
     def _unmark_being_destroyed
-      instances_being_destroyed.delete(id) 
+      instances_being_destroyed.delete(id)
     end
 
     public
@@ -313,7 +314,7 @@ module GraphMediator
     # You can turn mediation on or off on an instance by instance basis with
     # calls to disable_mediation! or enable_mediation!.
     #
-    # Mediation may also be disabled at the class level, but enabling or 
+    # Mediation may also be disabled at the class level, but enabling or
     # disabling an instance supercedes this.
     def mediation_enabled?
       enabled = @graph_mediator_mediation_disabled.nil? ?
@@ -325,7 +326,7 @@ module GraphMediator
       base, punctuation = parse_method_punctuation(method)
       define_method("#{base}_without_mediation#{punctuation}") do |*args,&block|
         disable_mediation!
-        send(method, *args, &block) 
+        send(method, *args, &block)
         enable_mediation!
       end
     end
@@ -342,7 +343,7 @@ module GraphMediator
     def mediators
       self.class.mediators
     end
-  
+
     def mediators_for_new_records
       self.class.mediators_for_new_records
     end
@@ -359,7 +360,7 @@ module GraphMediator
       mediator ||= mediators_for_new_records.find { |m| m.mediated_instance.equal?(self) || m.mediated_id == self.id }
       m_debug("#{self}.current_mediator found #{mediator || 'nothing'}")
       return mediator
-    end 
+    end
 
     private
 
@@ -426,7 +427,7 @@ module GraphMediator
     end
 
     def _method_defined(method, anywhere = true)
-      (instance_methods(anywhere) + private_instance_methods(anywhere)).include?(RUBY_VERSION < '1.9' ? method.to_s : method)
+      (instance_methods(anywhere) + private_instance_methods(anywhere)).include?(RUBY_VERSION < '1.9' ? method.to_s : method.to_sym)
     end
 
     # This uses Tammo Freese's patch to alias_method_chain.
@@ -442,7 +443,7 @@ module GraphMediator
     # raise a MediatorException
     def _alias_method_chain_ensuring_inheritability(target, feature, &block)
       raise(MediatorException, "Method #{target} has not been defined yet.") unless _method_defined(target)
- 
+
       # Strip out punctuation on predicates or bang methods since
       # e.g. target?_without_feature is not a valid method name.
       aliased_target, punctuation = parse_method_punctuation(target)
@@ -452,29 +453,29 @@ module GraphMediator
       unless method_defined_here
         module_eval do
           define_method(target) do |*args, &block|
-            super
+            super(*args, &block)
           end
-        end 
-      end  
-      
+        end
+      end
+
       __send__(:alias_method, without_method, target)
-    
+
       if block_given?
         # create with_method
         yield(aliased_target, punctuation)
       end
-  
+
       target_method_exists = _method_defined(with_method)
       raise NameError unless target_method_exists
-      
+
       module_eval do
         define_method(target) do |*args, &block|
           __send__(with_method, *args, &block)
         end
       end
     end
- 
-  end 
+
+  end
 
   # DSL for setting up and describing mediation.
   #
@@ -495,35 +496,35 @@ module GraphMediator
   #   further adjustments to the structure of the graph or non-cache attributes
   # * mediate_caches - routines for updating cache values
   #
-  # Example: 
+  # Example:
   #
   #  mediate_reconciles :bar do |instance|
   #    instance.something_else
   #  end
   #  mediate_reconciles :baz
   #
-  # will ensure that [:bar, <block>, :baz] are run in 
+  # will ensure that [:bar, <block>, :baz] are run in
   # sequence after :foo is done saveing within the context of a mediated
   # transaction.
   #
   module DSL
     include AliasExtension
 
-    # Establishes callbacks, dependencies and possible methods as entry points 
+    # Establishes callbacks, dependencies and possible methods as entry points
     # for mediation.
     #
     # * :methods => list of methods to mediate (automatically wrap in a
     #   mediated_transaction call)
     #
     # ActiveRecord::Base.save is decorated for mediation when GraphMediator
-    # is included into your model.  If you have additional methods which 
+    # is included into your model.  If you have additional methods which
     # perform bulk operations on members, you probably want to list them
     # here so that they are mediated as well.
     #
     # You should not list methods used for reconcilation, or cacheing.
     #
     # This macro takes a number of options:
-    # 
+    #
     # * :options => hash of options
     #   * :dependencies => list of dependent member classes whose save methods
     #     should be decorated for mediation as well.
@@ -535,7 +536,7 @@ module GraphMediator
     #  mediate :update_children,
     #    :dependencies => Child,
     #    :when_reconciling => :reconcile,
-    #    :when_caching => :cache 
+    #    :when_caching => :cache
     #
     # = Dependent Classes
     #
@@ -543,11 +544,11 @@ module GraphMediator
     # dependent class must provide an accessor for the root node, so that a
     # mediated_transaction can be begun in the root node when a dependent is
     # changed.  Dependent clases also have their destroy methods mediated so
-    # that destruction of a dependent also registers as a change to the 
+    # that destruction of a dependent also registers as a change to the
     # graph.
-    # 
+    #
     # == Deletion and Dependents
-    # 
+    #
     # When a class participating in mediation assigns a dependent to mediation,
     # destruction of that dependent class will cause an update to the parent's
     # lock_version.  This can cause a problem in Rails 2.3.6+ because
@@ -557,7 +558,7 @@ module GraphMediator
     # graph_mediator to update the lock_version of the parent, which then fails
     # the optimistic locking check when it is sent for destruction in
     # ActiveRecord::Locking::Optimistic#destroy_with_lock.
-    # 
+    #
     # To avoid this, GraphMediator causes an activerecord instance to flag when
     # it is in the process of destroying itself.  This flag is then checked by
     # dependents so they can bypass touching the parent when they are being
@@ -569,16 +570,16 @@ module GraphMediator
     # +updated_at+ or +updated_on+ for versioning and locks checks during
     # mediation.  The lock_column is incremented only once during a
     # mediated_transaction.
-    # 
+    #
     # <em>Unless both these columns are present in the schema,
     # versioning/locking will not happen.</em>  A lock_column by itself will
     # not be updated unless there is an updated_at/on timestamp available to
     # touch.
-    # 
+    #
     def mediate(*methods)
       options = methods.extract_options!
       self.graph_mediator_dependencies = Array(options[:dependencies] || [])
- 
+
       _register_for_mediation(*methods)
       graph_mediator_dependencies.each do |dependent_class|
         dependent_class.send(:extend, AliasExtension) unless dependent_class.include?(AliasExtension)

@@ -27,23 +27,23 @@ describe "GraphMediator" do
         t.integer :lock_version, :default => 0
         t.timestamps
       end
-    
+
       conn.create_table(:bars, :force => true) do |t|
         t.string :bar
         t.integer :lock_version, :default => 0
         t.timestamps
       end
-      
+
       conn.create_table(:untimestamped_things, :force => true) do |t|
         t.string :name
         t.integer :lock_version, :default => 0
       end
-    
+
       conn.create_table(:unlocked_things, :force => true) do |t|
         t.string :name
         t.timestamps
       end
-    
+
       conn.create_table(:plain_things, :force => true) do |t|
         t.string :name
       end
@@ -56,7 +56,7 @@ describe "GraphMediator" do
     GraphMediator::Configuration.enable_mediation.should == false
   end
 
-  it "should be able to disable and enable mediation globally"
+  xit "should be able to disable and enable mediation globally"
 
   it "should insert a MediatorProxy class when included" do
     Foo::MediatorProxy.should include(GraphMediator::Proxy)
@@ -64,7 +64,7 @@ describe "GraphMediator" do
   end
 
   it "should provide the mediate class macro" do
-    Foo.should respond_to(:mediate) 
+    Foo.should respond_to(:mediate)
   end
 
   it "should provide the mediate_reconciles class macro" do
@@ -85,7 +85,7 @@ describe "GraphMediator" do
         m_info('gm')
       end
     end
-    
+
     before(:all) do
       create_schema do |conn|
         conn.create_table(:logger_tests, :force => true) do |t|
@@ -129,7 +129,7 @@ describe "GraphMediator" do
         LoggerTest.logger = current_logger
       end
     end
-    
+
     it "should be possible to override graph logger" do
       mock_logger = mock("logger")
       mock_logger.should_receive(:info).once.with('gm')
@@ -139,7 +139,7 @@ describe "GraphMediator" do
   end
 
   context "with a fresh class" do
-  
+
     def load_bar
       c = Class.new(ActiveRecord::Base)
       Object.const_set(:Bar, c)
@@ -161,7 +161,7 @@ describe "GraphMediator" do
 #      Bar.__graph_mediator_reconciliation_callbacks.size.should == 1
 #      Bar.__graph_mediator_reconciliation_callbacks.first.should be_kind_of(Proc)
     end
- 
+
     it "should collect methods through mediate_reconciles" do
 #      Bar.__graph_mediator_reconciliation_callbacks.should == []
       Bar.mediate :when_reconciling => [:foo, :bar]
@@ -173,12 +173,12 @@ describe "GraphMediator" do
 #      Bar.__graph_mediator_reconciliation_callbacks.should have3
 #      Bar.__graph_mediator_reconciliation_callbacks.each { |e| e.should be_kind_of(Proc) }
     end
- 
+
     it "should get the when_cacheing option" do
       Bar.mediate :when_cacheing => :foo
       Bar.mediate_caches_callback_chain.should == [:foo]
     end
-  
+
     it "should collect methods through mediate_caches" do
       Bar.mediate :when_cacheing => [:foo, :bar]
       Bar.mediate_caches :baz do
@@ -187,19 +187,19 @@ describe "GraphMediator" do
       Bar.mediate_caches_callback_chain.should include(:foo, :bar, :baz)
       Bar.mediate_caches_callback_chain.should have(4).elements
     end
- 
+
     it "should get the dependencies option" do
       begin
         class ::Child < ActiveRecord::Base; end
         Bar.mediate :dependencies => Child
       ensure
-        Object.__send__(:remove_const, :Child) 
+        Object.__send__(:remove_const, :Child)
       end
     end
 
   end
 
-  context "with a defined mediation" do 
+  context "with a defined mediation" do
 
     before(:each) do
       load_traceable_callback_tester
@@ -300,13 +300,13 @@ describe "GraphMediator" do
 
     it "should override save" do
       @t.save
-      @traceables_callbacks.should == [:before, :reconcile, :cache,] 
+      @traceables_callbacks.should == [:before, :reconcile, :cache,]
       @t.new_record?.should be_false
     end
 
     it "should override save bang" do
       @t.save!
-      @traceables_callbacks.should == [:before, :reconcile, :cache,] 
+      @traceables_callbacks.should == [:before, :reconcile, :cache,]
       @t.new_record?.should be_false
     end
 
@@ -318,7 +318,7 @@ describe "GraphMediator" do
         end
       end
       @t.save
-      @traceables_callbacks.should == ['...saving...', :before, :reconcile, :cache,] 
+      @traceables_callbacks.should == ['...saving...', :before, :reconcile, :cache,]
       @t.new_record?.should be_false
     end
 
@@ -331,7 +331,7 @@ describe "GraphMediator" do
         end
       end
       @t.save
-      @traceables_callbacks.should == ['...saving...', :before, :reconcile, :cache,] 
+      @traceables_callbacks.should == ['...saving...', :before, :reconcile, :cache,]
       @t.new_record?.should be_false
     end
 
@@ -344,7 +344,7 @@ describe "GraphMediator" do
         end
       end
       @t.save
-      @traceables_callbacks.should == [:before, '...saving...', :reconcile, :cache,] 
+      @traceables_callbacks.should == [:before, '...saving...', :reconcile, :cache,]
       @t.new_record?.should be_false
     end
 
@@ -390,10 +390,10 @@ describe "GraphMediator" do
     end
 
     it "should get a mediator" do
-      begin 
+      begin
         mediator = @f.__send__(:_get_mediator)
         mediator.should be_kind_of(GraphMediator::Mediator)
-        mediator.mediated_instance.should == @f 
+        mediator.mediated_instance.should == @f
       ensure
         @f.__send__(:mediators_for_new_records).clear
       end

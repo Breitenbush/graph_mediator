@@ -9,59 +9,59 @@ describe "insert superclass" do
       methods.each do |m|
         alias_method "#{m}_without_decoration", m
         define_method(m) do |*args,&block|
-          super + " decorated" 
+          super(*args, &block) + " decorated"
         end
       end
-    end 
+    end
   end
-  
+
   def reload_foo
     [:Bar, :Foo, :SubFoo].each { |c| Object.send(:remove_const, c) if Object.const_defined?(c) }
     instance_eval <<EOS
   module ::Bar
     def second; 'bar second'; end
   end
-  
+
   module Baz
     def super_method
       'super'
     end
   end
-  
+
   class ::Foo
     extend Decorator
     include Bar
     include Baz
     module DecorateMe
       def first; 'first'; end
-      def second; super + ' overridden'; end
+      def second; super() + ' overridden'; end
       def third; 'third'; end
     end
     include DecorateMe
-  
+
     def local
       'local'
     end
-  
+
     decorate :first, :second, :third, :super_method, :local
-  
+
     def third
       'broken'
     end
   end
-  
+
   class ::SubFoo < Foo
     def first
-      'sub ' + super
+      'sub ' + super()
     end
     def first_without_decoration
-      'sub ' + super
+      'sub ' + super()
     end
     def second
-      'sub ' + super
+      'sub ' + super()
     end
     def second_without_decoration
-      'sub ' + super
+      'sub ' + super()
     end
   end
 EOS
