@@ -1,4 +1,5 @@
 require 'active_support/all'
+require 'active_support/callbacks'
 require 'graph_mediator/mediator'
 require 'graph_mediator/locking'
 require 'graph_mediator/version'
@@ -56,10 +57,11 @@ require 'pry'
 module GraphMediator
 
   CALLBACKS = [:before_mediation, :mediate_reconciles, :mediate_caches, :mediate_bumps]
-  SAVE_METHODS = [:save_without_transactions, :save_without_transactions!]
+  #SAVE_METHODS = [:before_save, :before_save!]
 
   # We want lib/graph_mediator to define GraphMediator constant
   require 'graph_mediator/mediator'
+  include ActiveSupport::Callbacks
 
   class MediatorException < Exception; end
 
@@ -80,7 +82,7 @@ module GraphMediator
       base.__graph_mediator_enabled = true
       base.__send__(:class_inheritable_array, :graph_mediator_dependencies)
       base.graph_mediator_dependencies = []
-      base.__send__(:_register_for_mediation, *(SAVE_METHODS.clone << { :track_changes => true }))
+      #base.__send__(:_register_for_mediation, *(SAVE_METHODS.clone << { :track_changes => true }))
       base.class_eval do
         _alias_method_chain_ensuring_inheritability(:destroy, :flag)
       end
@@ -583,7 +585,7 @@ module GraphMediator
       _register_for_mediation(*methods)
       graph_mediator_dependencies.each do |dependent_class|
         dependent_class.send(:extend, AliasExtension) unless dependent_class.include?(AliasExtension)
-        methods = SAVE_METHODS.clone
+        methods = [] #SAVE_METHODS.clone
         methods << :destroy
         methods << { :through => self.class_of_active_record_descendant(self).to_s.demodulize.underscore, :track_changes => true }
         dependent_class.send(:_register_for_mediation, *methods)
