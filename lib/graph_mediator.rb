@@ -121,6 +121,19 @@ module GraphMediator
       # Relies on ActiveSupport::Callbacks (which is included
       # into ActiveRecord::Base) for callback handling.
       base.define_callbacks *CALLBACKS
+
+      base.class_eval do
+        def self.mediate_reconciles(*args)
+          self.set_callback :mediate_reconciles, *args
+        end
+      end
+
+      base.class_eval do
+        def self.mediate_caches(*args)
+          self.set_callback :mediate_caches, *args
+        end
+      end
+
       return proxy
     end
 
@@ -590,6 +603,7 @@ module GraphMediator
         methods << { :through => self.class_of_active_record_descendant(self).to_s.demodulize.underscore, :track_changes => true }
         dependent_class.send(:_register_for_mediation, *methods)
       end
+
       mediate_reconciles(options[:when_reconciling]) if options[:when_reconciling]
       mediate_caches(options[:when_cacheing]) if options[:when_cacheing]
     end
