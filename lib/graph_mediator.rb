@@ -129,6 +129,12 @@ module GraphMediator
       end
 
       base.class_eval do
+        def self.before_mediation(*args)
+          self.set_callback :before_mediation, :before, *args
+        end
+      end
+
+      base.class_eval do
         def self.mediate_caches(*args)
           self.set_callback :mediate_caches, *args
         end
