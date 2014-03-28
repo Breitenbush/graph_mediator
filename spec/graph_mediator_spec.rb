@@ -2,22 +2,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 
 module GraphMediatorSpec # name space so these helper classes don't collide with another running spec
 
-class Foo < ActiveRecord::Base
-  include GraphMediator
-end
-
-class UntimestampedThing < ActiveRecord::Base
-  include GraphMediator
-end
-
-class UnlockedThing < ActiveRecord::Base
-  include GraphMediator
-end
-
-class PlainThing < ActiveRecord::Base
-  include GraphMediator
-end
-
 describe "GraphMediator" do
 
   before(:all) do
@@ -48,6 +32,24 @@ describe "GraphMediator" do
         t.string :name
       end
     end
+
+    class Foo < ActiveRecord::Base
+      include GraphMediator
+    end
+
+    class UntimestampedThing < ActiveRecord::Base
+      include GraphMediator
+    end
+
+    class UnlockedThing < ActiveRecord::Base
+      include GraphMediator
+    end
+
+    class PlainThing < ActiveRecord::Base
+      include GraphMediator
+    end
+
+
   end
 
   it "should provide a module attribute accessor for turning mediation on or off" do
@@ -76,20 +78,20 @@ describe "GraphMediator" do
   end
 
   context "testing logger" do
-    class LoggerTest < ActiveRecord::Base
-      include GraphMediator
-      def log_me
-        logger.debug('hi')
-      end
-      def log_me_graph_mediator
-        m_info('gm')
-      end
-    end
-
     before(:all) do
       create_schema do |conn|
         conn.create_table(:logger_tests, :force => true) do |t|
           t.string :name
+        end
+      end
+
+      class LoggerTest < ActiveRecord::Base
+        include GraphMediator
+        def log_me
+          logger.debug('hi')
+        end
+        def log_me_graph_mediator
+          m_info('gm')
         end
       end
     end
