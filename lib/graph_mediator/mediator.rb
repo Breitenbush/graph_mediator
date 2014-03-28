@@ -219,40 +219,52 @@ module GraphMediator
     private
 
     def begin_transaction(&block)
-      debug("begin_transaction called")
+      # debug("begin_transaction called")
+      binding.pry
       result = if mediation_enabled?
         start!
         _wrap_in_callbacks &block
       else
         disable!
-        debug("mediation disabled; begin_transaction yielding instead")
+        # debug("mediation disabled; begin_transaction yielding instead")
         yield self
       end
-      debug("begin_transaction finished successfully")
+      # debug("begin_transaction finished successfully")
+
+      binding.pry
+
       return result
     end
 
     def _wrap_in_callbacks
-      debug("_wrap_in_callbacks called")
-      debug("_wrap_in_callbacks before_mediation")
+      # debug("_wrap_in_callbacks called")
+      # debug("_wrap_in_callbacks before_mediation")
       mediated_instance.run_callbacks(:before_mediation)
-      debug("_wrap_in_callbacks before_mediation completed")
-      debug("_wrap_in_callbacks yielding")
+
+
+      binding.pry
+      # debug("_wrap_in_callbacks before_mediation completed")
+      # debug("_wrap_in_callbacks yielding")
       result = yield self
+
       # skip after_mediation if failed validation
       unless !result.nil? && result == false
-        debug("_wrap_in_callbacks yielding completed")
-        debug("_wrap_in_callbacks mediate_reconciles")
+        # debug("_wrap_in_callbacks yielding completed")
+        # debug("_wrap_in_callbacks mediate_reconciles")
         mediated_instance.run_callbacks(:mediate_reconciles)
         refresh_mediated_instance # after having reconciled
-        debug("_wrap_in_callbacks mediate_reconciles completed")
-        debug("_wrap_in_callbacks mediate_caches")
+        # debug("_wrap_in_callbacks mediate_reconciles completed")
+        # debug("_wrap_in_callbacks mediate_caches")
         mediated_instance.run_callbacks(:mediate_caches)
-        debug("_wrap_in_callbacks mediate_caches completed")
-        debug("_wrap_in_callbacks bumping")
+        # debug("_wrap_in_callbacks mediate_caches completed")
+        # debug("_wrap_in_callbacks bumping")
         bump!
-        mediated_instance.touch if mediated_instance.class.locking_enabled?
-        debug("_wrap_in_callbacks bumping done")
+        if mediated_instance.class.locking_enabled?
+          binding.pry
+          mediated_instance.touch && mediated_instance.update_attributes(:updated_at => Time.now)
+        end
+        # debug("_wrap_in_callbacks bumping done")
+        binding.pry
         refresh_mediated_instance # after having cached and versioned
       end
       return result
