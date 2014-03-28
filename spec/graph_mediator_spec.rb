@@ -157,28 +157,23 @@ describe "GraphMediator" do
     end
 
     it "should get the when_reconciling option" do
-#      Bar.__graph_mediator_reconciliation_callbacks.should == []
       Bar.mediate :when_reconciling => :foo
-      Bar.mediate_reconciles_callback_chain.should == [:foo]
-#      Bar.__graph_mediator_reconciliation_callbacks.size.should == 1
-#      Bar.__graph_mediator_reconciliation_callbacks.first.should be_kind_of(Proc)
+      binding.pry
+      Bar._mediate_reconciles_callbacks.map(&:filter).should == [:foo]
     end
 
     it "should collect methods through mediate_reconciles" do
-#      Bar.__graph_mediator_reconciliation_callbacks.should == []
       Bar.mediate :when_reconciling => [:foo, :bar]
       Bar.mediate_reconciles :baz do
         biscuit
       end
-      Bar.mediate_reconciles_callback_chain.should include(:foo, :bar, :baz)
-      Bar.mediate_reconciles_callback_chain.should have(4).elements
-#      Bar.__graph_mediator_reconciliation_callbacks.should have3
-#      Bar.__graph_mediator_reconciliation_callbacks.each { |e| e.should be_kind_of(Proc) }
+      Bar._mediate_reconciles_callbacks.map(&:filter).should include(:foo, :bar, :baz)
+      Bar._mediate_reconciles_callbacks.map(&:filter).should have(4).elements
     end
 
     it "should get the when_cacheing option" do
       Bar.mediate :when_cacheing => :foo
-      Bar.mediate_caches_callback_chain.should == [:foo]
+      Bar._mediate_caches_callbacks.map(&:filter).should == [:foo]
     end
 
     it "should collect methods through mediate_caches" do
@@ -186,8 +181,8 @@ describe "GraphMediator" do
       Bar.mediate_caches :baz do
         biscuit
       end
-      Bar.mediate_caches_callback_chain.should include(:foo, :bar, :baz)
-      Bar.mediate_caches_callback_chain.should have(4).elements
+      Bar._mediate_caches_callbacks.map(&:filter).should include(:foo, :bar, :baz)
+      Bar._mediate_caches_callbacks.map(&:filter).should have(4).elements
     end
 
     it "should get the dependencies option" do
