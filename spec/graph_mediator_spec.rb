@@ -324,10 +324,10 @@ describe "GraphMediator" do
 
     it "should allow me to decorate save_with_mediation" do
       Traceable.class_eval do
-        alias_method :save_without_transactions_with_mediation_without_logging, :save_without_transactions_with_mediation
-        def save_without_transactions_with_mediation(*args)
+        alias_method :save_with_mediation_without_logging, :save_with_mediation
+        def save_with_mediation(*args)
           callbacks << '...saving...'
-          save_without_transactions_with_mediation_without_logging(*args)
+          save_with_mediation_without_logging(*args)
         end
       end
       @t.save
@@ -337,10 +337,10 @@ describe "GraphMediator" do
 
     it "should allow me to decorate save_without_mediation" do
       Traceable.class_eval do
-        alias_method :save_without_transactions_without_mediation_without_logging, :save_without_transactions_without_mediation
-        def save_without_transactions_without_mediation(*args)
+        alias_method :save_without_mediation_without_logging, :save_without_mediation
+        def save_without_mediation(*args)
           callbacks << '...saving...'
-          save_without_transactions_without_mediation_without_logging(*args)
+          save_without_mediation_without_logging(*args)
         end
       end
       @t.save
