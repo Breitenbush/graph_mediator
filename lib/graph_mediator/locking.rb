@@ -20,13 +20,18 @@ module GraphMediator
         else
           # we have to go one by one unfortunately
           Array(ids).each do |id|
-            currently_mediating?(id) ?
-              update_counters_without_lock(id, counters) :
-              super()
+            binding.pry
+
+            if currently_mediating?(id)
+              counters = counters.merge(counters) if locking_enabled?
+            else
+              super
+            end
           end
         end
       end
     end
+
 
     module InstanceMethods
       # Overrides ActiveRecord::Locking::Optimistic#locking_enabled?
