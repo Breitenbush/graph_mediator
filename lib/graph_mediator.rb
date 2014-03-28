@@ -599,12 +599,13 @@ module GraphMediator
     #
     def mediate(*methods)
       options = methods.extract_options!
+      
       self.graph_mediator_dependencies = Array(options[:dependencies] || [])
 
       _register_for_mediation(*methods)
       graph_mediator_dependencies.each do |dependent_class|
         dependent_class.send(:extend, AliasExtension) unless dependent_class.include?(AliasExtension)
-        methods = [] #SAVE_METHODS.clone
+        methods = SAVE_METHODS.clone
         methods << :destroy
         methods << { :through => self.class_of_active_record_descendant(self).to_s.demodulize.underscore, :track_changes => true }
         dependent_class.send(:_register_for_mediation, *methods)
