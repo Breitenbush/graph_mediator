@@ -167,8 +167,8 @@ describe "GraphMediator" do
       Bar.mediate_reconciles :baz do
         biscuit
       end
-      Bar._mediate_reconciles_callbacks.map(&:filter).should include(:foo, :bar, :baz)
-      Bar._mediate_reconciles_callbacks.map(&:filter).should have(4).elements
+      Bar._mediate_reconciles_callbacks.map(&:filter).flatten.should include(:foo, :bar, :baz)
+      Bar._mediate_reconciles_callbacks.map(&:filter).flatten.should have(3).elements
     end
 
     it "should get the when_cacheing option" do
@@ -181,8 +181,8 @@ describe "GraphMediator" do
       Bar.mediate_caches :baz do
         biscuit
       end
-      Bar._mediate_caches_callbacks.map(&:filter).should include(:foo, :bar, :baz)
-      Bar._mediate_caches_callbacks.map(&:filter).should have(4).elements
+      Bar._mediate_caches_callbacks.map(&:filter).flatten.should include(:foo, :bar, :baz)
+      Bar._mediate_caches_callbacks.map(&:filter).flatten.should have(3).elements
     end
 
     it "should get the dependencies option" do
