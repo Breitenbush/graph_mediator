@@ -82,7 +82,7 @@ module GraphMediator
       base.__graph_mediator_enabled = true
       base.__send__(:class_inheritable_array, :graph_mediator_dependencies)
       base.graph_mediator_dependencies = []
-      #base.__send__(:_register_for_mediation, *(SAVE_METHODS.clone << { :track_changes => true }))
+      base.__send__(:_register_for_mediation, *(SAVE_METHODS.clone << { :track_changes => true }))
       base.class_eval do
         _alias_method_chain_ensuring_inheritability(:destroy, :flag)
       end
