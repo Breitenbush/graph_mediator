@@ -57,7 +57,7 @@ require 'pry'
 module GraphMediator
 
   CALLBACKS = [:before_mediation, :mediate_reconciles, :mediate_caches, :mediate_bumps]
-  #SAVE_METHODS = [:before_save, :before_save!]
+  SAVE_METHODS = [:save, :save!]
 
   # We want lib/graph_mediator to define GraphMediator constant
   require 'graph_mediator/mediator'
